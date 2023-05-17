@@ -5,10 +5,10 @@ export async function timeout(ms) {
   return new Promise((res) => setTimeout(res, ms))
 }
 
-export const downloadImagesProductLinks = async (page, link, teamName) => {
-  console.log(`----START download images products ${teamName}------`)
+export const downloadLinksImagesProduct = async (page, link, teamName) => {
+  console.log(`----START fetch links images products ${teamName}------`)
   await page.goto(link)
-  await timeout(2000)
+  await timeout(4000)
   const imageLinks = await page.evaluate(() => {
     let titleProduct = document.querySelector("h1").innerText
     titleProduct = titleProduct.substring(0, titleProduct.indexOf("Item"))
@@ -25,10 +25,10 @@ export const downloadImagesProductLinks = async (page, link, teamName) => {
       const image = product.attributes.data_img.nodeValue
       LinksImagesOfProduct.products.push(image.substring(0, image.indexOf("?")))
     })
-
     return LinksImagesOfProduct
   })
 
+  console.log(`----END fetch links images products ${teamName}------`)
   return imageLinks
 }
 
@@ -46,11 +46,15 @@ export const downloadImagesForProduct = async (product, teamName) => {
   Fs.mkdirSync(`./images/${teamName}/${product.title}`)
   for (const link of product.products) {
     console.log(link)
+    const extension = link.match(/\.(jpg|jpeg|webp|png)$/)
+    if (!extension) {
+      console.log(`----pas d'extension trouvé d'image trouvé----`)
+    }
     key++
     const response = await fetch(link)
       .then((res) => {
         const writer = Fs.createWriteStream(
-          `./images/${teamName}/${product.title}/${key}.jpg`
+          `./images/${teamName}/${product.title}/${key}${extension[0]}`
         )
         res.body.pipe(writer)
       })
@@ -58,12 +62,6 @@ export const downloadImagesForProduct = async (product, teamName) => {
         console.log(`erreur fetch`)
         return
       })
-  }
-}
-
-export const asyncForEach = async (array, callback) => {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
   }
 }
 
